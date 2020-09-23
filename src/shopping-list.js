@@ -1,13 +1,15 @@
 require('dotenv').config();
 const knex = require('knex');
 
+const ShoppingService = require('./shopping-list-service');
+
 const knexInstance = knex({
   client: 'pg',
   connection: process.env.DB_URL
 });
 
 function searchByProductName(searchTerm) {
-  knexInstance('shopping_list')
+  ShoppingService.getAllShoppingItems(knexInstance)
     .select('id', 'name', 'price', 'category')
     // .from('amazong_products') <-- omitted, specified 2 lines above
     .where('name', 'ILIKE', `%${searchTerm}%`)
@@ -23,16 +25,19 @@ function paginateProducts(page) {
   const offset = productsPerPage * (page - 1);
 
   knexInstance('shopping_list')
-    .select('id', 'name', 'price', 'category')
-    // .from('amazong_products')
+    .select('id', 'name', 'price', 'category')    
     .limit(productsPerPage)
     .offset(offset)
     .then(result => {
       console.log(result);
+    })
+    .catch(err => console.error(err))
+    .finally(() => {
+      knexInstance.destroy();
     });
 }
 
-// paginateProducts(1);
+paginateProducts(2);
 
 function getItemsAddedAfterDate(daysAgo) {
   knexInstance('shopping_list')
